@@ -6,38 +6,35 @@ import type { BlobConfig, GradientSettings } from '@/lib/types'
 import { DEFAULT_SETTINGS } from '@/lib/defaults'
 import { BlobCanvas } from '@/components/BlobCanvas'
 import { ExportModal } from '@/components/ExportModal'
-import { exportPNG, exportSettingsJSON, importSettingsJSON, generateCode } from '@/lib/exportUtils'
+import { ImportModal } from '@/components/ImportModal'
+import { exportPNG, exportSettingsJSON, generateCode } from '@/lib/exportUtils'
 import { generateId, nextBlobColor } from '@/lib/colorUtils'
 
 export default function Page() {
   const [blobs, setBlobs]                     = useState(DEFAULT_SETTINGS.blobs)
   const [selectedBlobId, setSelectedBlobId]   = useState<string | null>(null)
   const [showExportModal, setShowExportModal] = useState(false)
-  const canvasRef  = useRef<HTMLCanvasElement>(null)
-  const importRef  = useRef<HTMLInputElement>(null)
-  const settingsRef = useRef<GradientSettings | null>(null) // stable ref for action handlers
+  const [showImportModal, setShowImportModal] = useState(false)
+  const canvasRef   = useRef<HTMLCanvasElement>(null)
+  const settingsRef = useRef<GradientSettings | null>(null)
   const selectedRef = useRef<string | null>(null)
   selectedRef.current = selectedBlobId
 
   const dials = useDialKit('Blob Gradient', {
     showHandles:  true,
-    // Canvas
     canvasW:      { type: 'text' as const,  default: String(DEFAULT_SETTINGS.canvasWidth)  },
     canvasH:      { type: 'text' as const,  default: String(DEFAULT_SETTINGS.canvasHeight) },
     background:   { type: 'color' as const, default: DEFAULT_SETTINGS.backgroundColor },
     spread:       [DEFAULT_SETTINGS.spread, 0.2, 3.0] as [number, number, number],
-    // Color
     useGlobal:    false,
     globalColor:  { type: 'color' as const, default: DEFAULT_SETTINGS.globalColor },
     blobColor:    { type: 'color' as const, default: '#6366f1' },
-    // Blob actions
-    addBlob:      { type: 'action' as const, label: '+ Add Blob'       },
-    removeBlob:   { type: 'action' as const, label: 'Remove Selected'  },
-    // Export actions
-    exportPNG:    { type: 'action' as const, label: 'Export PNG'       },
-    saveJSON:     { type: 'action' as const, label: 'Save JSON'        },
-    importJSON:   { type: 'action' as const, label: 'Import JSON'      },
-    exportCode:   { type: 'action' as const, label: 'Export Code →'   },
+    addBlob:      { type: 'action' as const, label: '+ Add Blob'      },
+    removeBlob:   { type: 'action' as const, label: 'Remove Selected' },
+    exportPNG:    { type: 'action' as const, label: 'Export PNG'      },
+    saveJSON:     { type: 'action' as const, label: 'Save JSON'       },
+    importJSON:   { type: 'action' as const, label: 'Import JSON'     },
+    exportCode:   { type: 'action' as const, label: 'Export Code →'  },
   }, {
     onAction: (action: string) => {
       const sel = selectedRef.current
@@ -55,7 +52,7 @@ export default function Page() {
       }
       if (action === 'exportPNG'  && canvasRef.current) exportPNG(canvasRef.current)
       if (action === 'saveJSON'   && settingsRef.current) exportSettingsJSON(settingsRef.current)
-      if (action === 'importJSON') importRef.current?.click()
+      if (action === 'importJSON') setShowImportModal(true)
       if (action === 'exportCode') setShowExportModal(true)
     },
   })
@@ -74,6 +71,11 @@ export default function Page() {
     setBlobs(bs => bs.map(b => b.id === id ? { ...b, ...patch } : b))
   }, [])
 
+  const handleImport = (imported: GradientSettings) => {
+    setBlobs(imported.blobs)
+    setSelectedBlobId(null)
+  }
+
   const canvasW = Math.max(100, parseInt(dials.canvasW) || DEFAULT_SETTINGS.canvasWidth)
   const canvasH = Math.max(100, parseInt(dials.canvasH) || DEFAULT_SETTINGS.canvasHeight)
 
@@ -87,19 +89,6 @@ export default function Page() {
     globalColor:     dials.globalColor,
   }
   settingsRef.current = effectiveSettings
-
-  const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    try {
-      const imported = await importSettingsJSON(file)
-      setBlobs(imported.blobs)
-      setSelectedBlobId(null)
-    } catch {
-      alert("Could not read the settings file — make sure it's a valid JSON export.")
-    }
-    e.target.value = ''
-  }
 
   const { tsx, css } = showExportModal ? generateCode(effectiveSettings) : { tsx: '', css: '' }
 
@@ -116,7 +105,9 @@ export default function Page() {
         />
       </div>
 
-      <input ref={importRef} type="file" accept=".json" className="hidden" onChange={handleImportFile} />
+      {showImportModal && (
+        <ImportModal onImport={handleImport} onClose={() => setShowImportModal(false)} />
+      )}
 
       {showExportModal && (
         <ExportModal tsx={tsx} css={css} onClose={() => setShowExportModal(false)} />
