@@ -1,26 +1,41 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #08080f;
+  --foreground: #ededed;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+/* ── Reusable UI primitives ─────────────────────────────── */
+
+.section-label {
+  @apply block text-xs text-neutral-400 uppercase tracking-wider mb-2;
+}
+
+.field-label {
+  @apply text-xs text-neutral-600 mb-1;
+}
+
+.field-input {
+  @apply w-full bg-neutral-900 border border-neutral-800 text-white text-xs rounded
+         px-2 py-1.5 focus:outline-none focus:border-neutral-600 transition-colors;
+}
+
+.color-swatch {
+  @apply w-7 h-7 rounded cursor-pointer border border-neutral-700 bg-transparent p-0.5;
+}
+
+.btn-ghost {
+  @apply text-xs py-1.5 px-3 rounded bg-neutral-800 hover:bg-neutral-700
+         text-neutral-300 transition-colors cursor-pointer;
+}
+
+.btn-primary {
+  @apply text-xs py-1.5 px-3 rounded bg-indigo-600 hover:bg-indigo-500
+         text-white transition-colors cursor-pointer;
 }
