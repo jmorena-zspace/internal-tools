@@ -39,3 +39,8 @@ body {
   @apply text-xs py-1.5 px-3 rounded bg-indigo-600 hover:bg-indigo-500
          text-white transition-colors cursor-pointer;
 }
+
+/* Hide DialKit's built-in clipboard button — replaced by Copy JSON action */
+button[title="Copy parameters"] {
+  display: none !important;
+}

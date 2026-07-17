@@ -123,7 +123,7 @@ export function BlobCanvas({ canvasRef, settings, selectedBlobId, showHandles, o
   const aspect = canvasWidth / canvasHeight
 
   return (
-    <div className="relative w-full" style={{ aspectRatio: `${canvasWidth}/${canvasHeight}` }}>
+    <div className="relative w-full h-full">
       <canvas
         ref={canvasRef as React.RefObject<HTMLCanvasElement>}
         width={canvasWidth}
